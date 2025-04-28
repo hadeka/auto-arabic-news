@@ -45,6 +45,7 @@ def slugify(value: str) -> str:
     return re.sub(r"[^\w\-]", "", value).lower()[:80]
 
 def save_markdown(title_ar: str, summary_ar: str, source_url: str):
+    os.makedirs("_posts", exist_ok=True)
     slug = slugify(title_ar)
     uid_path = f"content/{slug}.md"
     if os.path.exists(uid_path):
