@@ -40,14 +40,13 @@ def textrank_summary(text: str, max_sentences: int = 3) -> str:
     summary = TextRankSummarizer()(parser.document, max_sentences)
     return " ".join(str(sentence) for sentence in summary)
 
-def slugify(value: str) -> str:
+def slugify(value: str) -> str:                 # BUG-FIX #1
     value = re.sub(r"[\s_]+", "-", value.strip())
-    return re.sub(r"[^\w\-]", "", value).lower()[:80]
-
+    return re.sub(r"[^\w\-]", "", value).lower()  # ← add () here
 def save_markdown(title_ar: str, summary_ar: str, source_url: str):
-    os.makedirs("_posts", exist_ok=True)
+    os.makedirs("_posts", exist_ok=True)        # folder always exists
     slug = slugify(title_ar)
-    uid_path = f"content/{slug}.md"
+    uid_path = f"_posts/{slug}.md"              # BUG-FIX #2
     if os.path.exists(uid_path):
         return
     date_iso = datetime.datetime.utcnow().isoformat()
