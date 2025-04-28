@@ -1,6 +1,8 @@
 
 import os, hashlib, datetime, feedparser, requests, re
 from bs4 import BeautifulSoup
+import nltk
+nltk.download("punkt")
 
 # ---------- CONFIG ----------
 NEWS_SOURCES = [
