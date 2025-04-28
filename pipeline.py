@@ -2,7 +2,7 @@
 import os, hashlib, datetime, feedparser, requests, re
 from bs4 import BeautifulSoup
 import nltk
-nltk.download("punkt")
+nltk.download("punkt", quiet=True)   # ← add quiet=True so it works non-interactive
 
 # ---------- CONFIG ----------
 NEWS_SOURCES = [
