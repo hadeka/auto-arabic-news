@@ -60,7 +60,7 @@ slug: "{slug}"
 {summary_ar}
 
 [المصدر الأصلي]({source_url})
-"""
+""
     with open(uid_path, "w", encoding="utf-8") as f:
         f.write(md)
 
