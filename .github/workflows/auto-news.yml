@@ -1,0 +1,33 @@
+name: Auto Arabic News
+
+on:
+  push:            # run on every commit
+  schedule:
+    - cron: '0 * * * *'   # and also once per hour
+  workflow_dispatch:      # adds the green “Run workflow” button
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run pipeline
+        env:
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+        run: python pipeline.py
+
+      - name: Commit & push generated posts
+        run: |
+          git config --global user.email "bot@example.com"
+          git config --global user.name  "news-bot"
+          git add _posts
+          git diff --cached --quiet || (git commit -m "auto: update posts" && git push)
