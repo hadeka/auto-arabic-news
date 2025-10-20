@@ -1,0 +1,60 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+.venv
+venv/
+ENV/
+env/
+
+# ARC data (downloaded datasets)
+arc_data/training/*.json
+arc_data/evaluation/*.json
+arc_data/test/*.json
+
+# Keep sample data
+!arc_data/samples/*.json
+
+# ML models and checkpoints
+*.pth
+*.pt
+*.ckpt
+checkpoints/
+models/
+
+# Outputs
+arc_submission.json
+*.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
