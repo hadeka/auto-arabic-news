@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive 3D Milky Way Galaxy Simulation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #000;
+            color: #fff;
+            overflow: hidden;
+        }
+
+        #canvas-container {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+        }
+
+        #info-panel {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            max-width: 350px;
+            z-index: 100;
+        }
+
+        #info-panel h1 {
+            font-size: 1.5em;
+            margin-bottom: 15px;
+            background: linear-gradient(45deg, #00d4ff, #ff00ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        #info-panel h2 {
+            font-size: 1.1em;
+            margin-top: 15px;
+            margin-bottom: 8px;
+            color: #00d4ff;
+        }
+
+        #info-panel p, #info-panel li {
+            font-size: 0.9em;
+            line-height: 1.6;
+            color: #ccc;
+        }
+
+        #info-panel ul {
+            margin-left: 20px;
+            margin-top: 5px;
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 5px 0;
+            padding: 5px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 5px;
+        }
+
+        .stat-label {
+            color: #00d4ff;
+        }
+
+        .stat-value {
+            color: #fff;
+            font-weight: bold;
+        }
+
+        #controls {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.7);
+            padding: 15px 25px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        button {
+            background: linear-gradient(45deg, #00d4ff, #0088cc);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9em;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        button:hover {
+            background: linear-gradient(45deg, #00e4ff, #0098dc);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 212, 255, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .speed-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .speed-control label {
+            font-size: 0.9em;
+            color: #00d4ff;
+        }
+
+        .speed-control input {
+            width: 100px;
+        }
+
+        #loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 1.5em;
+            text-align: center;
+        }
+
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-left-color: #00d4ff;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .legend {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 5px 0;
+        }
+
+        .legend-color {
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            box-shadow: 0 0 10px currentColor;
+        }
+    </style>
+</head>
+<body>
+    <div id="canvas-container"></div>
+
+    <div id="loading">
+        <div class="spinner"></div>
+        <p>Generating Milky Way Galaxy...</p>
+        <p id="progress">0%</p>
+    </div>
+
+    <div id="info-panel">
+        <h1>Milky Way Galaxy</h1>
+        <p>Interactive 3D Simulation</p>
+
+        <h2>Statistics</h2>
+        <div class="stat-row">
+            <span class="stat-label">Total Stars:</span>
+            <span class="stat-value" id="total-stars">0</span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">Disk Stars:</span>
+            <span class="stat-value" id="disk-stars">0</span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">Bulge Stars:</span>
+            <span class="stat-value" id="bulge-stars">0</span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">Halo Stars:</span>
+            <span class="stat-value" id="halo-stars">0</span>
+        </div>
+
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color" style="background: #87CEEB; color: #87CEEB;"></div>
+                <span>Disk Stars (Young, Hot)</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #FFD700; color: #FFD700;"></div>
+                <span>Bulge Stars (Old, Warm)</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #FF6B6B; color: #FF6B6B;"></div>
+                <span>Halo Stars (Ancient, Cool)</span>
+            </div>
+        </div>
+
+        <h2>Controls</h2>
+        <ul>
+            <li>Left Mouse: Rotate view</li>
+            <li>Right Mouse: Pan view</li>
+            <li>Scroll: Zoom in/out</li>
+            <li>Space: Toggle auto-rotation</li>
+        </ul>
+    </div>
+
+    <div id="controls">
+        <button id="toggle-rotation">Pause Rotation</button>
+        <button id="reset-view">Reset View</button>
+        <div class="speed-control">
+            <label>Speed:</label>
+            <input type="range" id="rotation-speed" min="0" max="5" step="0.1" value="1">
+        </div>
+    </div>
+
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+                "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+            }
+        }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+        // Configuration
+        const CONFIG = {
+            numDiskStars: 35000,
+            numBulgeStars: 10000,
+            numHaloStars: 5000,
+            rotationSpeed: 0.001
+        };
+
+        let scene, camera, renderer, controls;
+        let diskStars, bulgeStars, haloStars;
+        let isRotating = true;
+        let rotationSpeed = CONFIG.rotationSpeed;
+
+        // Initialize the scene
+        function init() {
+            // Scene setup
+            scene = new THREE.Scene();
+            scene.fog = new THREE.FogExp2(0x000000, 0.0003);
+
+            // Camera setup
+            camera = new THREE.PerspectiveCamera(
+                60,
+                window.innerWidth / window.innerHeight,
+                0.1,
+                1000
+            );
+            camera.position.set(50, 30, 50);
+            camera.lookAt(0, 0, 0);
+
+            // Renderer setup
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+            // Controls
+            controls = new OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            controls.screenSpacePanning = false;
+            controls.minDistance = 10;
+            controls.maxDistance = 200;
+
+            // Lights
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
+            scene.add(ambientLight);
+
+            const pointLight = new THREE.PointLight(0xffffff, 1, 0);
+            pointLight.position.set(0, 0, 0);
+            scene.add(pointLight);
+
+            // Event listeners
+            window.addEventListener('resize', onWindowResize);
+            document.getElementById('toggle-rotation').addEventListener('click', toggleRotation);
+            document.getElementById('reset-view').addEventListener('click', resetView);
+            document.getElementById('rotation-speed').addEventListener('input', updateSpeed);
+            document.addEventListener('keydown', (e) => {
+                if (e.code === 'Space') {
+                    e.preventDefault();
+                    toggleRotation();
+                }
+            });
+
+            // Generate galaxy
+            generateGalaxy();
+
+            // Hide loading screen
+            document.getElementById('loading').style.display = 'none';
+
+            // Start animation
+            animate();
+        }
+
+        // Generate spiral arm
+        function generateSpiralArm(numStars, armOffset, spread = 0.3) {
+            const positions = [];
+            const colors = [];
+            const a = 0.5;
+            const b = 0.3;
+
+            for (let i = 0; i < numStars; i++) {
+                const theta = (i / numStars) * 4 * Math.PI + armOffset;
+                let r = a * Math.exp(b * theta);
+
+                // Add randomness
+                r += (Math.random() - 0.5) * spread * 2;
+                const thetaRand = theta + (Math.random() - 0.5) * 0.2;
+
+                // Convert to Cartesian
+                const x = r * Math.cos(thetaRand);
+                const y = (Math.random() - 0.5) * 0.2; // Disk thickness
+                const z = r * Math.sin(thetaRand);
+
+                positions.push(x, y, z);
+
+                // Color - blue-white for disk stars
+                colors.push(0.53, 0.81, 0.92); // Sky blue
+            }
+
+            return { positions, colors };
+        }
+
+        // Generate galaxy structure
+        function generateGalaxy() {
+            // Generate 4 spiral arms
+            const allDiskPositions = [];
+            const allDiskColors = [];
+            const starsPerArm = CONFIG.numDiskStars / 4;
+
+            for (let armOffset of [0, Math.PI / 2, Math.PI, 3 * Math.PI / 2]) {
+                const { positions, colors } = generateSpiralArm(starsPerArm, armOffset);
+                allDiskPositions.push(...positions);
+                allDiskColors.push(...colors);
+            }
+
+            // Create disk stars
+            const diskGeometry = new THREE.BufferGeometry();
+            diskGeometry.setAttribute('position', new THREE.Float32BufferAttribute(allDiskPositions, 3));
+            diskGeometry.setAttribute('color', new THREE.Float32BufferAttribute(allDiskColors, 3));
+
+            const diskMaterial = new THREE.PointsMaterial({
+                size: 0.15,
+                vertexColors: true,
+                transparent: true,
+                opacity: 0.8,
+                blending: THREE.AdditiveBlending,
+                sizeAttenuation: true
+            });
+
+            diskStars = new THREE.Points(diskGeometry, diskMaterial);
+            scene.add(diskStars);
+
+            // Generate central bulge
+            const bulgePositions = [];
+            const bulgeColors = [];
+
+            for (let i = 0; i < CONFIG.numBulgeStars; i++) {
+                const r = Math.abs(randomGaussian() * 1.5);
+                const theta = Math.random() * 2 * Math.PI;
+                const phi = Math.random() * Math.PI;
+
+                const x = r * Math.sin(phi) * Math.cos(theta);
+                const y = r * Math.cos(phi);
+                const z = r * Math.sin(phi) * Math.sin(theta);
+
+                bulgePositions.push(x, y, z);
+                bulgeColors.push(1.0, 0.84, 0.0); // Gold
+            }
+
+            const bulgeGeometry = new THREE.BufferGeometry();
+            bulgeGeometry.setAttribute('position', new THREE.Float32BufferAttribute(bulgePositions, 3));
+            bulgeGeometry.setAttribute('color', new THREE.Float32BufferAttribute(bulgeColors, 3));
+
+            const bulgeMaterial = new THREE.PointsMaterial({
+                size: 0.2,
+                vertexColors: true,
+                transparent: true,
+                opacity: 0.9,
+                blending: THREE.AdditiveBlending,
+                sizeAttenuation: true
+            });
+
+            bulgeStars = new THREE.Points(bulgeGeometry, bulgeMaterial);
+            scene.add(bulgeStars);
+
+            // Generate halo
+            const haloPositions = [];
+            const haloColors = [];
+
+            for (let i = 0; i < CONFIG.numHaloStars; i++) {
+                const r = Math.abs(randomGaussian() * 15);
+                const theta = Math.random() * 2 * Math.PI;
+                const phi = Math.random() * Math.PI;
+
+                const x = r * Math.sin(phi) * Math.cos(theta);
+                const y = r * Math.cos(phi);
+                const z = r * Math.sin(phi) * Math.sin(theta);
+
+                haloPositions.push(x, y, z);
+                haloColors.push(1.0, 0.42, 0.42); // Light red
+            }
+
+            const haloGeometry = new THREE.BufferGeometry();
+            haloGeometry.setAttribute('position', new THREE.Float32BufferAttribute(haloPositions, 3));
+            haloGeometry.setAttribute('color', new THREE.Float32BufferAttribute(haloColors, 3));
+
+            const haloMaterial = new THREE.PointsMaterial({
+                size: 0.1,
+                vertexColors: true,
+                transparent: true,
+                opacity: 0.5,
+                blending: THREE.AdditiveBlending,
+                sizeAttenuation: true
+            });
+
+            haloStars = new THREE.Points(haloGeometry, haloMaterial);
+            scene.add(haloStars);
+
+            // Update statistics
+            document.getElementById('total-stars').textContent =
+                (CONFIG.numDiskStars + CONFIG.numBulgeStars + CONFIG.numHaloStars).toLocaleString();
+            document.getElementById('disk-stars').textContent = CONFIG.numDiskStars.toLocaleString();
+            document.getElementById('bulge-stars').textContent = CONFIG.numBulgeStars.toLocaleString();
+            document.getElementById('halo-stars').textContent = CONFIG.numHaloStars.toLocaleString();
+        }
+
+        // Random Gaussian distribution
+        function randomGaussian() {
+            let u = 0, v = 0;
+            while (u === 0) u = Math.random();
+            while (v === 0) v = Math.random();
+            return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+        }
+
+        // Animation loop
+        function animate() {
+            requestAnimationFrame(animate);
+
+            if (isRotating) {
+                if (diskStars) diskStars.rotation.y += rotationSpeed;
+                if (bulgeStars) bulgeStars.rotation.y += rotationSpeed * 0.5;
+            }
+
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        // Toggle rotation
+        function toggleRotation() {
+            isRotating = !isRotating;
+            document.getElementById('toggle-rotation').textContent =
+                isRotating ? 'Pause Rotation' : 'Resume Rotation';
+        }
+
+        // Reset view
+        function resetView() {
+            camera.position.set(50, 30, 50);
+            camera.lookAt(0, 0, 0);
+            controls.reset();
+        }
+
+        // Update rotation speed
+        function updateSpeed(e) {
+            rotationSpeed = parseFloat(e.target.value) * CONFIG.rotationSpeed;
+        }
+
+        // Handle window resize
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        // Start the application
+        init();
+    </script>
+</body>
+</html>
